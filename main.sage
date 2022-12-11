@@ -189,5 +189,4 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
                 s = try_point_ECM_anomalous(P, n)
                 if s != 0:
                     return s
-    return 0
-    
+    return 0;
