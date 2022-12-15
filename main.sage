@@ -3,6 +3,9 @@ import time
 random.seed(time.time())
 
 
+load('supersingular_curves.sage')
+load('anomalous_curves.sage')
+
 def logbasetwo(n):
 
     m =1;
@@ -33,43 +36,8 @@ def gen_modulus_anomalous(D,m, secret = False):
     return p*q
 
 
-def gen_modulus_supersingular(B, sizep, resMod12 = False, secret = False):
 
-    if resMod12 not in [False, 3,2,1]:
-        return 'resMod12 must be in [False, 3,2,1]'
-
-    p = 2*random_prime(B)
-    while logbasetwo(p) < sizep:
-        p = p*random_prime(B)
-    i = 7
-    while is_prime(p*i-1) == False:
-        i = next_prime(i+1)
-    p = p*i-1
-
-
-    if resMod12 == 3:
-        while Mod(p,4) != 3:
-            gen_modulus_supersingular(B, sizep, 3, secret)
-
-    if resMod12 == 2:
-        while Mod(p,3) != 2:
-            gen_modulus_supersingular(B, sizep, 2, secret)
-
-    if resMod12 == 1:
-        while Mod(p,12) != 1:
-            gen_modulus_supersingular(B, sizep, 1, secret)
-
-    n = logbasetwo(p)
-    q = randint(2^(n-1),2^n)
-    q = next_prime(q)
-
-    if secret == True:
-        return p,q
-    return p*q
-
-
-
-def gen_modulus_supersingular_no_constraint(B, sizep, secret = False):
+def gen_modulus_supersingular(B, sizep, secret = False):
 
     p = 2*random_prime(B)
     while logbasetwo(p) < sizep:
@@ -84,9 +52,12 @@ def gen_modulus_supersingular_no_constraint(B, sizep, secret = False):
     q = randint(2^(n-1),2^n)
     q = next_prime(q)
 
+    bound = max(i,B)   # max(i, B) is  the smoothness bound of p+1
+    leg_symbols = [legendre_symbol(-D,p) for D in DISC_SUPERSINGULAR]  # this indicates which curves will be able to factor n
+
     if secret == True:
-        return p,q, max(i,B)
-    return p*q, max(i,B)
+        return p,q, bound, leg_symbols
+    return p*q, bound, leg_symbols
 
 
 
@@ -94,7 +65,8 @@ def gen_curve_point_from_j(n,j):
 
     Zn = Integers(n)
     u = randint(1,n-1)
-    v = u*randint(1,n-1) - u -1
+    v = randint(1,n-1)
+
     if j == 0:
         A = 0
         B = v^2 - u^3
@@ -152,7 +124,7 @@ def ECM_supersingular(n, B1, B, Disc = DISC_SUPERSINGULAR):
 
         for k in range(B1,B+1):
             try:
-                if k == B1+1:
+                if k == B1:
                     Q = scalar_mult(Q, k0)
                 Q = scalar_mult(Q, k^t)
             except ZeroDivisionError as e:
