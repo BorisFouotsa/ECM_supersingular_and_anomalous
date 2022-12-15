@@ -156,9 +156,10 @@ def ECM_supersingular(n, B1, B, Disc = DISC_SUPERSINGULAR):
                     Q = scalar_mult(Q, k0)
                 Q = scalar_mult(Q, k^t)
             except ZeroDivisionError as e:
-                ans = getattr(e, 'message', str(e)) # r =getattr(e, 'message', repr(e))
+                ans = getattr(e, 'message', str(e))
                 del(k0)
                 return ans, index
+    del(k0)
     return 0
 
 
