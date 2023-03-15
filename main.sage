@@ -107,10 +107,10 @@ def try_point_ECM_anomalous(P, n):
 
 
 
-def ECM_supersingular(n, B, B1=1, Disc = DISC_SUPERSINGULAR):
+def ECM_supersingular(n, B, B1=1):
     '''B is the smoothness bound of p+1 and B1<B is a bound for which (B!)^{log B}
     is calculated beforre entering perfoming the scalar multiplications'''
-    
+
     Zn = Integers(n)
     t = logbasetwo(B)
     k0 = factorial(B1)^t
