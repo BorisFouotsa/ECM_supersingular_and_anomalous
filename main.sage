@@ -6,7 +6,7 @@ random.seed(time.time())
 #load('supersingular_curves.sage')
 load('anomalous_curves.sage')
 
-SUPERSINGULAR_J = [5400, 287496,-3375, 8000, -32768, -884736,  -884736000,-147197952000, -262537412640768000]
+SUPERSINGULAR_J = [54000, 287496,-3375, 8000, -32768, -884736,  -884736000,-147197952000, -262537412640768000]
 
 def logbasetwo(n):
 
@@ -55,7 +55,7 @@ def gen_modulus_supersingular(B, sizep, secret = False):
     q = next_prime(q)
 
     bound = max(i,B)   # max(i, B) is  the smoothness bound of p+1
-    #leg_symbols = [legendre_symbol(-D,p) for D in DISC_SUPERSINGULAR]  # this indicates which curves will be able to factor n
+    #leg_symbols = [legendre_symbol(-D,p) genfor D in DISC_SUPERSINGULAR]  # this indicates which curves will be able to factor n
 
     if secret == True:
         return p,q, bound  #, leg_symbols
@@ -107,7 +107,7 @@ def try_point_ECM_anomalous(P, n):
 
 
 
-def ECM_supersingular(n, B, B1=1):
+def ECM_supersingular(n, B, B1=1, Jinv = SUPERSINGULAR_J):
     '''B is the smoothness bound of p+1 and B1<B is a bound for which (B!)^{log B}
     is calculated beforre entering perfoming the scalar multiplications'''
 
@@ -115,7 +115,9 @@ def ECM_supersingular(n, B, B1=1):
     t = logbasetwo(B)
     k0 = factorial(B1)^t
 
-    for j in SUPERSINGULAR_J:
+    for j in Jinv:
+        if j not in SUPERSINGULAR_J:
+            continue  # 'Your j-invaraints must be in SUPERSINGULAR_J'
         a = Zn(27*j/(4*(1728 - j)))
         E = EllipticCurve([a,-a])
         Q = E(Zn(1),Zn(1))
@@ -128,7 +130,7 @@ def ECM_supersingular(n, B, B1=1):
             except ZeroDivisionError as e:
                 ans = getattr(e, 'message', str(e))
                 del(k0)
-                return ans, index
+                return ans
     del(k0)
     return 0
 
