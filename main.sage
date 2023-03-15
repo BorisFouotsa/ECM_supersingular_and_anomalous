@@ -15,6 +15,11 @@ def logbasetwo(n):
         m = m+1;
     return m;
 
+def extract_first_integer_in_text(txt):
+    for s in txt.split():
+        if s.isdigit():
+            break
+    return(int(s))
 
 def gen_modulus_anomalous(m, D = 0, secret = False):
 
@@ -101,8 +106,11 @@ def try_point_ECM_anomalous(P, n):
     try:
         Q = scalar_mult(P, n)
     except ZeroDivisionError as e:
-        s = getattr(e, 'message', str(e))
-        return s
+        txt = getattr(e, 'message', str(e))
+        m = extract_first_integer_in_text(txt)
+        d = gcd(m,n)
+        if d != 1:
+            return d
     return 0
 
 
@@ -128,9 +136,12 @@ def ECM_supersingular(n, B, B1=1, Jinv = SUPERSINGULAR_J):
                     Q = scalar_mult(Q, k0)
                 Q = scalar_mult(Q, k^t)
             except ZeroDivisionError as e:
-                ans = getattr(e, 'message', str(e))
+                txt = getattr(e, 'message', str(e))
                 del(k0)
-                return ans
+                m = extract_first_integer_in_text(txt)
+                d = gcd(m,n)
+                if d != 1:
+                    return d
     del(k0)
     return 0
 
@@ -159,7 +170,7 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
                 E = EllipticCurve(a_coefs)
                 E = E.change_ring(Zn)
                 P = E(Zn(u),Zn(v))
-                s = try_point_ECM_anomalous(P, n)
+                d = try_point_ECM_anomalous(P, n)
                 if s != 0:
-                    return s
+                    return d
     return 0
