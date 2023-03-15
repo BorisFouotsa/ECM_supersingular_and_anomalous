@@ -156,9 +156,9 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
         if D == 3:    # j = 0
             for t in range(60):
                 P = gen_curve_j0(n)
-                s = try_point_ECM_anomalous(P, n)
-                if s != 0:
-                    return s
+                d = try_point_ECM_anomalous(P, n)
+                if d != 0:
+                    return d
 
         else:
             if D not in DISC_ANOMALOUS:
@@ -171,6 +171,6 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
                 E = E.change_ring(Zn)
                 P = E(Zn(u),Zn(v))
                 d = try_point_ECM_anomalous(P, n)
-                if s != 0:
+                if d != 0:
                     return d
     return 0
