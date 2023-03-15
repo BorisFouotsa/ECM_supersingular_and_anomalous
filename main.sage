@@ -1,9 +1,7 @@
 import random
 import time
-random.seed(time.time())
+#random.seed(time.time())
 
-
-#load('supersingular_curves.sage')
 load('anomalous_curves.sage')
 
 DISC_SUPERSINGULAR = [3,4,7,8,11,19,43,67,163]
