@@ -6,7 +6,21 @@ random.seed(time.time())
 #load('supersingular_curves.sage')
 load('anomalous_curves.sage')
 
+DISC_SUPERSINGULAR = [3,4,7,8,11,19,43,67,163]
 SUPERSINGULAR_J = [54000, 287496,-3375, 8000, -32768, -884736,  -884736000,-147197952000, -262537412640768000]
+
+DISC_ANOMALOUS = [3,11,19,27,43,67,163]
+ANOMALOUS_J = [0, -32768, -884736, -12288000, -884736000,-147197952000, -262537412640768000]
+
+CURVES_ANOMALOUS = [
+    CURVES_ANOMALOUS_3,
+    CURVES_ANOMALOUS_11,
+    CURVES_ANOMALOUS_19,
+    CURVES_ANOMALOUS_27,
+    CURVES_ANOMALOUS_43,
+    CURVES_ANOMALOUS_67,
+    CURVES_ANOMALOUS_163
+]
 
 def logbasetwo(n):
 
@@ -39,15 +53,16 @@ def gen_modulus_anomalous(m, D = 0, secret = False):
     q = next_prime(q)
 
     if secret == True:
-        return p,q
-    return p*q
+        return p,q, D
+    return p*q, D
 
 
 
 def gen_modulus_supersingular(B, sizep, secret = False):
 
+    p_approx = 2^sizep
     p = 2*random_prime(B)
-    while logbasetwo(p) < sizep:
+    while p < p_approx:
         p = p*random_prime(B)
     i = 5
     while is_prime(p*i-1) == False:
@@ -60,11 +75,10 @@ def gen_modulus_supersingular(B, sizep, secret = False):
     q = next_prime(q)
 
     bound = max(i,B)   # max(i, B) is  the smoothness bound of p+1
-    #leg_symbols = [legendre_symbol(-D,p) genfor D in DISC_SUPERSINGULAR]  # this indicates which curves will be able to factor n
 
     if secret == True:
-        return p,q, bound  #, leg_symbols
-    return p*q, bound  #, leg_symbols
+        return p,q, bound
+    return p*q, bound
 
 
 
@@ -81,8 +95,6 @@ def gen_curve_j0(n):
     P = E(u,v)
 
     return P
-
-
 
 
 
@@ -162,7 +174,7 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
 
         else:
             if D not in DISC_ANOMALOUS:
-                return 'Your discriminants must be in [3,11,19,27,43,67,163]'
+                return f'Your discriminants must be in {DISC_ANOMALOUS}'
             index = DISC_ANOMALOUS.index(D)
             curves = CURVES_ANOMALOUS[index]
 
@@ -173,4 +185,59 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
                 d = try_point_ECM_anomalous(P, n)
                 if d != 0:
                     return d
+    return 0
+
+
+def test_supersingular(bound = 2^10, sizep = 512):
+
+    print(f'You are running a test on the ECM based p+1  factoring algorithm.\n')
+    print(f'A {2*sizep} bits "vulnerable" RSA nodulus is being generated...\n')
+
+    p,q,B = gen_modulus_supersingular(bound, sizep, secret = True)
+    leg_symbols = [legendre_symbol(-D,p) for D in DISC_SUPERSINGULAR]
+    while -1 not in leg_symbols:
+        p,q,B = gen_modulus_supersingular(bound, sizep, secret = True)
+        leg_symbols = [legendre_symbol(-D,p) for D in DISC_SUPERSINGULAR]
+
+    n = p*q
+    t = leg_symbols.index(-1)
+    D = DISC_SUPERSINGULAR[t]
+    j = SUPERSINGULAR_J[t]
+
+
+    print(f'The RSA modulus is \n n = {n}, \n')
+    print(f'n = p*q where p+1 is B = {B} smooth and (-D/p) = -1 with D = {D}.\n')
+    print(f"Let's run the ECM p+1 on n with the curve having j-invaraint j = {j}.\n")
+
+    d = ECM_supersingular(n, B, B1=1, Jinv = [j])
+
+    if 1<d<n and Mod(n,d) == 0:
+        print(f'A factor d of the RSA modulus  n was recovered,  \n d = {d}\n')
+    else:
+        print(f'the algorithm failed to factor the RSA modulus  n.')
+    return 0
+
+
+
+def test_anomalous(sizep = 2048, D  = 0):
+
+    print(f'You are running a test on the ECM with anomalous curve factoring algorithm.\n')
+    print(f'A {2*sizep} bits "vulnerable" RSA nodulus is being generated...\n')
+    print(f'The modulus  generation may last tens of seconds, especially for large size n...\n')
+
+    n, D = gen_modulus_anomalous(2^sizep, secret = False)
+    t = DISC_ANOMALOUS.index(D)
+    j = ANOMALOUS_J[t]
+
+    print(f'The RSA modulus is \n \n n = {n}, \n')
+    print(f'n = p*q where p = Dm(m+1)+ (D+1)/4 with D = {D}.\n')
+    print(f"Let's run the ECM on n with anomalous curves  having j-invariant j = {j}.\n")
+    t = time.time()
+    d = ECM_anomalous(n, Disc = [D])
+    t1 = time.time() - t
+
+    if 1<d<n and Mod(n,d) == 0:
+        print(f'A factor d of the RSA modulus  n was recovered in {t1} seconds,  \n\n d = {d}\n')
+    else:
+        print(f'the algorithm failed to factor the RSA modulus  n. This means that none of the curves used was anomalous. Try again ;)')
     return 0
