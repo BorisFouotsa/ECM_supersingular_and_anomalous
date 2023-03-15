@@ -3,8 +3,10 @@ import time
 random.seed(time.time())
 
 
-load('supersingular_curves.sage')
+#load('supersingular_curves.sage')
 load('anomalous_curves.sage')
+
+SUPERSINGULAR_J = [5400, 287496,-3375, 8000, -32768, -884736,  -884736000,-147197952000, -262537412640768000]
 
 def logbasetwo(n):
 
@@ -14,10 +16,10 @@ def logbasetwo(n):
     return m;
 
 
-def gen_modulus_anomalous(D,m, secret = False):
+def gen_modulus_anomalous(m, D = 0, secret = False):
 
-    if D not in [3, 11, 19, 27, 43, 67, 163]:
-        return 'D must be in [3,11,19,27,43,67,163]'
+    if D not in DISC_ANOMALOUS:
+        D = random.choice(DISC_ANOMALOUS)
 
     m = m+randint(1,m)
 
@@ -53,29 +55,25 @@ def gen_modulus_supersingular(B, sizep, secret = False):
     q = next_prime(q)
 
     bound = max(i,B)   # max(i, B) is  the smoothness bound of p+1
-    leg_symbols = [legendre_symbol(-D,p) for D in DISC_SUPERSINGULAR]  # this indicates which curves will be able to factor n
+    #leg_symbols = [legendre_symbol(-D,p) for D in DISC_SUPERSINGULAR]  # this indicates which curves will be able to factor n
 
     if secret == True:
-        return p,q, bound, leg_symbols
-    return p*q, bound, leg_symbols
+        return p,q, bound  #, leg_symbols
+    return p*q, bound  #, leg_symbols
 
 
 
-def gen_curve_point_from_j(n,j):
+def gen_curve_j0(n):
 
     Zn = Integers(n)
-    u = randint(1,n-1)
-    v = randint(1,n-1)
+    u = Zn(randint(1,n-1))
+    v = Zn(randint(1,n-1))
+    while v^2 == u^3:
+        v = Zn(randint(1,n-1))
 
-    if j == 0:
-        A = 0
-        B = v^2 - u^3
-    elif j == 1728:
-        A = (v^2 - u^3)/u
-        B = 0
-    E = EllipticCurve([A, B])
-    E = E.change_ring(Zn)
-    P = E(Zn(u),Zn(v))
+    B = Zn(v^2 - u^3)
+    E = EllipticCurve([0, B])
+    P = E(u,v)
 
     return P
 
@@ -109,18 +107,18 @@ def try_point_ECM_anomalous(P, n):
 
 
 
-def ECM_supersingular(n, B1, B, Disc = DISC_SUPERSINGULAR):
-
+def ECM_supersingular(n, B, B1=1, Disc = DISC_SUPERSINGULAR):
+    '''B is the smoothness bound of p+1 and B1<B is a bound for which (B!)^{log B}
+    is calculated beforre entering perfoming the scalar multiplications'''
+    
     Zn = Integers(n)
     t = logbasetwo(B)
     k0 = factorial(B1)^t
 
-    for D in Disc:
-        index = DISC_SUPERSINGULAR.index(D)
-        [a_coefs,[u,v]] = CURVES_SUPERSINGULAR[index]
-        E = EllipticCurve(a_coefs)
-        E = E.change_ring(Zn)
-        Q = E(Zn(u),Zn(v))
+    for j in SUPERSINGULAR_J:
+        a = Zn(27*j/(4*(1728 - j)))
+        E = EllipticCurve([a,-a])
+        Q = E(Zn(1),Zn(1))
 
         for k in range(B1,B+1):
             try:
@@ -143,8 +141,8 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
     for D in Disc:
 
         if D == 3:    # j = 0
-            for t in range(50):
-                P = gen_curve_point_from_j(n,0)
+            for t in range(60):
+                P = gen_curve_j0(n)
                 s = try_point_ECM_anomalous(P, n)
                 if s != 0:
                     return s
