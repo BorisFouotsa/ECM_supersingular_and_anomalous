@@ -30,8 +30,8 @@ def logbasetwo(n):
 def extract_first_integer_in_text(txt):
     for s in txt.split():
         if s.isdigit():
-            break
-    return(int(s))
+            return(int(s))
+    return 0
 
 def gen_modulus_anomalous(m, D = 0, secret = False):
 
@@ -56,7 +56,7 @@ def gen_modulus_anomalous(m, D = 0, secret = False):
 
 
 
-def gen_modulus_supersingular(B, sizep, secret = False):
+def gen_modulus_supersingular(B, sizep, secret=False):
 
     p_approx = 2^sizep
     p = 2*random_prime(B)
@@ -125,7 +125,7 @@ def try_point_ECM_anomalous(P, n):
 
 
 
-def ECM_supersingular(n, B, B1=1, Jinv = SUPERSINGULAR_J):
+def ECM_supersingular(n, B, B1=1, Jinv=SUPERSINGULAR_J):
     '''B is the smoothness bound of p+1 and B1<B is a bound for which (B!)^{log B}
     is calculated beforre entering perfoming the scalar multiplications'''
 
@@ -157,7 +157,7 @@ def ECM_supersingular(n, B, B1=1, Jinv = SUPERSINGULAR_J):
 
 
 
-def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
+def ECM_anomalous(n, Disc=DISC_ANOMALOUS):
 
     Zn = Integers(n)
 
@@ -186,7 +186,7 @@ def ECM_anomalous(n, Disc = DISC_ANOMALOUS):
     return 0
 
 
-def test_supersingular(bound = 2^10, sizep = 512):
+def test_supersingular(bound=2^10, sizep=512):
 
     print(f'You are running a test on the ECM based p+1  factoring algorithm.\n')
     print(f'A {2*sizep} bits "vulnerable" RSA nodulus is being generated...\n')
@@ -217,7 +217,7 @@ def test_supersingular(bound = 2^10, sizep = 512):
 
 
 
-def test_anomalous(sizep = 2048, D  = 0):
+def test_anomalous(sizep=1024, D=0):
 
     print(f'You are running a test on the ECM with anomalous curve factoring algorithm.\n')
     print(f'A {2*sizep} bits "vulnerable" RSA nodulus is being generated...\n')
@@ -239,3 +239,11 @@ def test_anomalous(sizep = 2048, D  = 0):
     else:
         print(f'the algorithm failed to factor the RSA modulus  n. This means that none of the curves used was anomalous. Try again ;)')
     return 0
+
+
+print('\n')
+test_supersingular()
+print('\n')
+print('\n')
+test_anomalous()
+print('\n')
